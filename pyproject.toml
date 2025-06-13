@@ -1,0 +1,83 @@
+[project]
+name = "Limitus-agents"
+version = "0.0.0"
+description = "Agents that think"
+authors = [{ name = "JP Bianchi", email = "jpbianchi@gmail.com" }]
+requires-python = "~=3.12"
+readme = "README.md"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "aiohttp",
+    "pydantic",
+    "pydantic-settings",
+    "openai>=1.0.0",
+    "numpy==1.26.4", # Or "~=1.26" for minor updates
+    "pywebui",
+    "openai",
+    "hydralit_components",
+    "streamlit",
+    "requests",
+    "selenium>=4.15.0",
+    "webdriver-manager>=4.0.0"
+]
+
+[dependency-groups]
+dev = [
+    "mypy==1.11.2",
+    "ruff==0.6.8",
+    "pytest==8.3.3",
+    "pre-commit==3.8.0",
+    "types-requests==2.32.0.20240914",
+    "pytest-asyncio==0.24.0",
+    "deptry==0.20.0",
+    "pytest-mock==3.14.0",
+    "python-dotenv"
+]
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.mypy]
+ignore_missing_imports = true
+show_column_numbers = true
+disallow_incomplete_defs = true
+namespace_packages = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = [
+    ".git", ".ipynb_checkpoints", ".mypy_cache", ".pyenv", ".pytest_cache", ".ruff_cache",
+    ".venv", "__pypackages__", ".idea", "__pycache__", "htmlcov", "dist", '*/prompts/*', '*prompt.py',
+    "streamlit_app/" 
+]
+respect-gitignore = true
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+select = ["A", "E", "F", "W", "N", "B", "I001", "ERA001"]
+ignore = ["B008"] # Avoid getting alerts when running callables as default for function parameters
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+lines-after-imports = -1 # automatic setup
+relative-imports-order = "closest-to-furthest"
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "N999"] # Module imported but not used
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
