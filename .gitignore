@@ -7,6 +7,8 @@ __pycache__/
 assets/
 README1.md
 .streamlit/
+agent-ui/
+TODO.md
 # C extensions
 *.so
 
