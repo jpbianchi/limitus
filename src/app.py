@@ -36,9 +36,9 @@ if not pathlib.Path('models').exists():
 # golden_dataset = EmbeddingQAFinetuneDataset.from_json("data/golden_100.json")
 
 ## PAGE CONFIGURATION
-st.set_page_config(page_title="Ask Impact Theory", 
+st.set_page_config(page_title="Limitus", 
                 #    page_icon="assets/impact-theory-logo-only.png", 
-                   page_icon="assets/logos/great_logos.png", 
+                   page_icon="http://www.w3.org/2000/svg",
                    layout="wide", 
                    initial_sidebar_state="collapsed", 
                    menu_items={'Report a bug': "https://www.extremelycoolapp.com/bug"})
