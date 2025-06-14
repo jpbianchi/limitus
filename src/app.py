@@ -1,7 +1,5 @@
-#%% 
-
 # from sentence_transformers import SentenceTransformer
-from prompt_templates import question_answering_prompt_series, question_answering_system
+# from prompt_templates import question_answering_prompt_series, question_answering_system
 # from openai_interface import GPT_Turbo
 
 from openai import BadRequestError
@@ -47,7 +45,7 @@ st.set_page_config(page_title="Ask Impact Theory",
 
 
 # image = "https://is2-ssl.mzstatic.com/image/thumb/Music122/v4/bd/34/82/bd348260-314c-5898-26c0-bef2e0388ebe/source/1200x1200bb.png"
-image = "assets/logos/great_logos.png"
+# image = "assets/logos/great_logos.png"
 
 
 def add_bg_from_local(image_file):
@@ -78,26 +76,28 @@ cache_path = 'data/impact_theory_cache.parquet'
 # data = load_data(data_path)
 cache = None  # load_content_cache(cache_path) 
 # guest_list = sorted(list(set([d['guest'] for d in data])))
+we_are_not_online = os.getenv('ENV') == 'local'
+we_are_online = not we_are_not_online
 
-if 'secrets' in st.secrets:
+if we_are_not_online:
 #     # st.write("Loading secrets from [secrets] section")
 #     # for streamlit online or local, which uses a [secrets] section
-    openai_api_key = st.secrets['secrets']['OPENAI_API_KEY']
+    openai_api_key = st.secrets['OPENAI_API_KEY']
+    st.write(f"Got openai api key {openai_api_key[:7]}")
 
 #     # hf_token = st.secrets['secrets']['LLAMA2_ENDPOINT_HF_TOKEN']
 #     # hf_endpoint = st.secrets['secrets']['LLAMA2_ENDPOINT']
-    we_are_online = st.secrets['secrets']['ENV'] == 'local'
 
 else :
 #     # st.write("Loading secrets for Huggingface")
 #     # for Huggingface (no [secrets] section)
 
-    openai_api_key = st.secrets['OPENAI_API_KEY']
-    we_are_online = st.secrets['ENV'] == 'local'
+    openai_api_key = os.getenv('OPENAI_API_KEY')
+    # st.write(f"Got openai api key {openai_api_key[:10]}")
 
     # hf_token = st.secrets['LLAMA2_ENDPOINT_HF_TOKEN']
     # hf_endpoint = st.secrets['LLAMA2_ENDPOINT']
-we_are_not_online = not we_are_online
+
 
 ##############
 
@@ -148,7 +148,7 @@ def main():
         delete_models = st.button('Delete models')
         if delete_models:
             # model_path = os.path.join("models", model_name_or_path.split('/')[-1])
-            # if os.path.isdir(model_path):
+            # if os.path.isdir(model_path): 
             #     shutil.rmtree(model_path) 
             for model in os.listdir("models"):
                 model_path = os.path.join("models", model)
