@@ -34,6 +34,8 @@ COPY src/ ./src/
 COPY data/ ./data
 COPY uv.lock ./
 
+RUN mkdir -p models && chmod -R 777 models
+
 # RUN pip3 install -r requirements.txt
 RUN uv sync
 ENV PATH="/app/.venv/bin:${PATH}"

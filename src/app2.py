@@ -88,98 +88,34 @@ cache_path = 'data/impact_theory_cache.parquet'
 # data = load_data(data_path)
 cache = None  # load_content_cache(cache_path) 
 # guest_list = sorted(list(set([d['guest'] for d in data])))
+we_are_not_online = os.getenv('ENV') == 'local'
+we_are_online = not we_are_not_online
 
-if 'secrets' in st.secrets:
+if we_are_not_online:
 #     # st.write("Loading secrets from [secrets] section")
 #     # for streamlit online or local, which uses a [secrets] section
-    openai_api_key = st.secrets['secrets']['OPENAI_API_KEY']
+    openai_api_key = st.secrets['OPENAI_API_KEY']
+    st.write(f"Got openai api key {openai_api_key[:7]}")
 
 #     # hf_token = st.secrets['secrets']['LLAMA2_ENDPOINT_HF_TOKEN']
 #     # hf_endpoint = st.secrets['secrets']['LLAMA2_ENDPOINT']
-    we_are_online = st.secrets['secrets']['ENV'] == 'local'
 
 else :
 #     # st.write("Loading secrets for Huggingface")
 #     # for Huggingface (no [secrets] section)
 
-    openai_api_key = st.secrets['OPENAI_API_KEY']
-    we_are_online = st.secrets['ENV'] == 'local'
+    openai_api_key = os.getenv('OPENAI_API_KEY')
+    st.write(f"Got openai api key {openai_api_key[:10]}")
 
     # hf_token = st.secrets['LLAMA2_ENDPOINT_HF_TOKEN']
     # hf_endpoint = st.secrets['LLAMA2_ENDPOINT']
-we_are_not_online = not we_are_online
+
 
 ##############
 
 def main():
 
-    with st.sidebar:
-        _, center, _ = st.columns([3, 5, 3])
-        with center:
-            st.text("Search Lab")
-            
-        _, center, _ = st.columns([2, 5, 3])
-        with center:
-            if we_are_online:
-                st.text("Running ONLINE")
-                # st.text("(UNSTABLE)")
-            else:
-                st.text("Running OFFLINE")
-        st.write("----------")
-
-        hybrid_search = st.toggle('Hybrid Search', True)
-        if hybrid_search:
-            alpha_input = st.slider(label='Alpha',min_value=0.00, 
-                                    max_value=1.00, value=0.40, step=0.05, key=1)
-            retrieval_limit = st.slider(label='Hybrid Search Results', 
-                                        min_value=10, max_value=300, value=10, step=10)
-
-            hybrid_filter = st.toggle('Filter Search using Guest name', True) # i.e. look only at guests' data
-            
-            rerank = st.toggle('Rerank', True)
-            if rerank:
-                reranker_topk = st.slider(label='Reranker Top K',min_value=1, max_value=5, value=3, step=1)
-            else:
-                # needed to not fill the LLM with too many responses (> context size)
-                # we could make it dependent on the model
-                reranker_topk = 3
-            
-            rag_it = st.toggle(f"RAG it with SOME MODEL", True)
-            if rag_it:
-                # st.write(f"Using LLM '{model_nameGPT}'")
-                llm_temperature = st.slider(label='LLM T˚', min_value=0.0, 
-                                            max_value=2.0, value=0.01, step=0.10 )
-        available_models = ['no_model']
-        model_name_or_path = st.selectbox(label='Model Name:', 
-                                          options=available_models, 
-                                          index=available_models.index('no_model'),
-                                          placeholder='Select Model')
-        
-        delete_models = st.button('Delete models')
-        if delete_models:
-            # model_path = os.path.join("models", model_name_or_path.split('/')[-1])
-            # if os.path.isdir(model_path): 
-            #     shutil.rmtree(model_path) 
-            for model in os.listdir("models"):
-                model_path = os.path.join("models", model)
-                if os.path.isdir(model_path) and 'finetuned-all-mpnet-base-v2-300' not in model_path:
-                    shutil.rmtree(model_path)
-            st.write("Models deleted")
-            
-        if we_are_not_online:
-            st.write("Experimental and time limited 2'")
-            c1,c2 = st.columns([8,1])
-            with c1: 
-                st.write("Finetuning not available")
-        
-        # check_model(model_name_or_path)
-        # client, available_classes = get_weaviate_client(Wapi_key, url, model_name_or_path, openai_api_key)       
-        print("Available classes:", "NONE")
-        
-        # maybe the free sandbox has expired, or the api key is wrong
-        st.sidebar.write(f"Weaviate sandbox not accessible or expired")
-        # st.stop()
-            
+   
     st.title("Chat with our crypto agents on Discord!")
     # st.image('./assets/impact-theory-logo.png', width=400)
     # st.image('assets/it_tom_bilyeu.png', use_column_width=True)
@@ -190,8 +126,6 @@ def main():
     
     st.write("\u21D0 Open the sidebar to change Search settings \n ")  # https://home.unicode.org also 21E0, 21B0  B2 D0
 
-    if not hybrid_search:
-        st.stop()
         
     col1, _ = st.columns([3,7])
     with col1:
