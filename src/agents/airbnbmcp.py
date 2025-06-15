@@ -12,6 +12,9 @@ from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.tools.mcp import MCPTools
 from agno.utils.pprint import apprint_run_response
+from agno.playground import Playground, serve_playground_app
+from agno.tools.reasoning import ReasoningTools
+from agno.tools.thinking import ThinkingTools
 from agno.models.openrouter import OpenRouter
 from tools.ecommerce import ecommerce
 
@@ -32,28 +35,52 @@ ossmodel = OpenRouter(
                     max_tokens=10000,
                     api_key=os.getenv('OPENROUTER_API_KEY'))
 
-async def run_agent(message: str) -> None:
-    async with MCPTools(
+instructions = [""" Post everything the user writes to the Discord channel, dot NOT answer it, and provide a status message after doing it """]
+expected_output = """ a status message about the post to Discord"""
+
+discord_mcp_tool = MCPTools(
         # "npx -y @openbnb/mcp-server-airbnb --ignore-robots-txt",
-        "",
+        # "",
         "node src/agents/discordmcp/build/index.js",
         env={"DISCORD_TOKEN": os.environ["DISCORD_BOT_TOKEN"]},
-        timeout_seconds=20
-    ) as mcp_tools:
-        agent = Agent(
-            model=ossmodel,
-            tools=[mcp_tools],
-            markdown=True,
-        )
+        timeout_seconds=20)
 
+async def make_agent(message: str = "") -> None:
+   async with discord_mcp_tool as mcp_tool:
+        agent = Agent(
+            name="MCP discord",
+            model=ossmodel,
+            tools=[
+                mcp_tool
+                #    , ThinkingTools(add_instructions=True)
+                ],
+            instructions=instructions,
+            markdown=True,
+
+            show_tool_calls=False,
+
+        )
+            # playground = Playground(agents=[agent])
+            # app = playground.get_app()
+            # playground.serve(app)
+                
         response_stream = await agent.arun(message, stream=True)
         await apprint_run_response(response_stream, markdown=True)
 
 
+# limitus_agent = await make_agent()
+# # # agents = [asyncio.run(make_agent())]  if several agents
+# app = Playground(agents=[limitus_agent]).get_app(use_async=False)
+
 if __name__ == "__main__":
+    # serve_playground_app("airbnbmcp:app", reload=True, port=7777)
+    # asyncio.run(make_agent())
     asyncio.run(
-        run_agent(
+        make_agent(
             # "What listings are available in San Francisco for 2 people for 3 nights from 1 to 4 August 2025?"
-            "Say 'hello' to the discord channel"
+            "Say 'hello2' to the discord channel"
         )
     )
+    # async def xx():        
+    #     await serve_playground_app("airbnbmcp:app", reload=True, port=7777) 
+    # asyncio.run(xx())
