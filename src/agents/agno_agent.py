@@ -1,8 +1,8 @@
 from textwrap import dedent
-from agno.agent import Agent
 import os
 import asyncio
 import nest_asyncio
+from agno.agent import Agent
 from agno.models.meta import Llama
 from agno.models.huggingface import HuggingFace
 import agno.memory.v2 as mem
@@ -15,8 +15,6 @@ from agno.memory.v2.db.sqlite import SqliteMemoryDb
 from agno.models.openrouter import OpenRouter
 from tools.ecommerce import ecommerce
 
-import logging
-
 if os.getenv('ENVIRONMENT') is None:
     from dotenv import load_dotenv
     load_dotenv(override=True)
@@ -24,15 +22,18 @@ if os.getenv('ENVIRONMENT') is None:
 # Allow nested event loops (due to vscode)
 nest_asyncio.apply()
 
-logger = logging.getLogger()
-
 ossmodel = OpenRouter(
-                    # id="meta-llama/llama-3.3-70b-instruct",
-                    id="openai/gpt-4.1-nano",
+                    # id="meta-llama/llama-3.3-70b-instruct",     # not good for MCP
+                    # id="deepseek/deepseek-r1-distill-llama-70b", # ok for MCP
+                    # id="deepseek/deepseek-r1-distill-qwen-32b", # not good for MCP
+                    # id="deepseek/deepseek-r1-0528:free",          # not good for MCP
+                    id="deepseek/deepseek-r1",  # ok for MCP
+                    # id="qwen/qwen3-235b-a22b",   # ok for MCP
+                    # id="openai/gpt-4.1-nano",
                     max_tokens=10000,
-                    api_key=os.getenv('OPENROUTER_API_KEY'))
+                    api_key=os.getenv('OPENROUTER_API_KEY')) 
 
-# HuggingFace models all fail for some reason
+# HuggingFace models all failed for some reason
 ossmodel2 = HuggingFace(
                       # id= "deepseek-ai/DeepSeek-R1-0528",
                       #  id="meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
@@ -67,37 +68,51 @@ memory = mem.Memory(
 
 DISCORD_BOT_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
 
-instructions1 = [
-                    """
-                    You are a sales specialist, able to analyze a user's needs and decide the best items for his specified purpose.
+instructions = [    # For 'non GPT4' models, I had to 'help' the model for MCP by giving the tools to use
+                    dedent("""                
+                        - If the user asks to post something on the discord server, do it on the general channel and do NOT process the message
+                        - To send a message, use the MCP tool send-message(channel=general, message=<message>)
+                        - If the user asks to read posts from the discord server, do it on the general channel and DO process the message just like any message entered by the user
+                        - To read n messages, use the MCP tool read-messages(channel=general, limit=n)
+                        - It is very important you respect these two messages format for Discord or someone is going to get hurt badly!
+                    """),
+                    dedent("""
+                    You are a sales specialist, able to analyze a user's needs and recommend the best items for his specified purpose.
+                    The user may give you his request directly or in a post on discord.  
 
                     # Core requirements:
-                    - Make sure to review the tools definitions to understand how to use them, and the data they return
-                    - Connect to the website and retrieve the list of items.
-                    - Understand the user's needs and find the best tools adapted to his issue or endeavor
-                    - Present the user with all the items first even if you must recommend the most appropriate ones, and then present your choices.
-                    - Analyze the user query to determine the important aspects related to the items in the inventory to help make a choice, 
+                    - If a user asks you to retrieve his instructions on discord, read the last post on Discord and treat is as if it was given directly.
+                    - Otherwise, process his request without caring about Discord and use the ecommerce tools
+                    - Review the tools descriptions to understand how to use them, and the data they return
+                    - At the beginning of a conversation, ALWAYS connect to the website using the tool and retrieve the list of items.
+                    - Understand the user's needs and find the best items adapted to his issue or endeavor
+                    - Present the user with all the items you recommend, with the price, and the description on the next line
+
+                    - Understand the user message to determine the relevant aspects to recommend items from the inventory, 
                         in particular the intended activity, location, occasion (holiday, office dinner etc). 
-                    - If the user asks for a specific item, you must add it to the list of choices you have prepared.
-                    - If the user says he doesn't want an item, you must remove it from your list of choices if you picked it. 
-                    - Ask for more information if needed to better identify the items needed
-                    - Then post a summary of the purchase on a discord channel using the MCP tool
+
                     - If the question is not about the items in the website, just reply normally, without using tools.
-                    - If the user asks specifically to post a message on Discord, do it using the MCPtool.
+
+                    # STEPS:
+                    - retrieve the items list from the website (never from the web) and show them to the user
+                    - understand the user question to find out which items correspond to his wishes (e.g. running shoes if he likes to run)
+                    - If the user asks for a specific item, you must add it to the list of choices you have prepared.
+                    - If the user says he doesn't want an item, you must remove it from your list of recommendations. 
+                    - Automatically order the recommended items without asking the user.
+                    - Present the user with the proof of purchase if the website returned it.
+                    - Then post a summary of the purchase on the 'general' discord channel using the MCP tool if it's available
 
                     # IMPORTANT
-                        * Use the right number of appropriate items without overbuying 
-                        * You must think of all the possible uses of an item, or what they are related to.  
-                        For instance, a pedal is part of a bike and is relevant for someone who wants to bike.  
-                        * Ask for permission to checkout the items.
-                        * At EVERY step, also post the same message to Discord
-                    """,
-                    """
-                    Present the user with a final output in markdown, with the purchased items, prices, and purchase proof if you retrieved it
-                    """
+                        * You can ONLY mention items that were retrieved from the website, not some item you found on the web
+                        * NEVER retrieve items from your memory - ALWAYS use the tools provided
+                        * Always show the price of every item 
+                        * For your recommendation, you must think of all the possible uses of an item.  
+                        * For the order, use the default names, zip code etc.
+                    """)
                 ]
+
 expected_output = f"""Typical Answer 
-                    here are the choices I propose:
+                    here are the choices I recommend:
                     - item1, price: 
                       description \n
                     - item2, price: 
@@ -110,68 +125,67 @@ expected_output = f"""Typical Answer
                     Show the <Confirmation>
                     """
                     
-instructions = [""" Post everything the user writes to the Discord channel, dot NOT answer it, and provide a status message after doing it """]
-expected_output = """ a status message about the post to Discord"""
+
+# many mcp servers at https://github.com/modelcontextprotocol/servers
+discord_mcp_tool = MCPTools(
+        "node src/agents/discordmcp/build/index.js",
+        # create a bot on discord, get the token, then allow the bot to manage a server
+        env={"DISCORD_TOKEN": os.environ["DISCORD_BOT_TOKEN"]},
+        timeout_seconds=20)
 
 async def make_agent() -> Agent:
-
     try:
-        async with MCPTools(
-                # many mcp servers at https://github.com/modelcontextprotocol/servers
-                # command="uv run mcp-discord",
-                command="node src/agents/discordmcp/build/index.js",
-                env={"DISCORD_TOKEN": DISCORD_BOT_TOKEN},
-                timeout_seconds=30  # increase if you get error "cannot retrieve tools"
-            ) as discord_mcp_tool:
-            agent = Agent(
+        async with MCPTools("node src/agents/discordmcp/build/index.js", 
+                            env={"DISCORD_TOKEN": os.environ["DISCORD_BOT_TOKEN"]}, 
+                            timeout_seconds=30) as mcp_tools:
+            agent1 = Agent(
                 name="Limitus AI Agent",
                 model=ossmodel,
                 markdown=True,
                 tools=[
                     ecommerce,
-                    discord_mcp_tool,
+                    mcp_tools,
                     ReasoningTools(add_instructions=True),
-                    ThinkingTools(add_instructions=True)
+                    # ThinkingTools(add_instructions=True)
                 ],
                 show_tool_calls=False,
-                add_state_in_messages=True,
-                session_state={'items': {}},
-                storage=SqliteAgentStorage(table_name="session_state", 
-                                           db_file="data/session_state.db",
-                                           auto_upgrade_schema=True,),  # for session state
+
                 debug_mode=False,
                 add_datetime_to_instructions=True,
 
                 instructions=instructions,
                 expected_output=expected_output,
-                
-                enable_agentic_memory=True,  # update memory during runs
-                enable_user_memories=True,  # Agent stores user facts/preferences
-                enable_session_summaries=True,  # Agent stores session summaries
-                # add_session_summary_references=True,  # Add session summary references to responses
-                add_history_to_messages=True,  # Include chat history in model context
+                add_state_in_messages=True,
+                session_state={'items': {}},
+                storage=SqliteAgentStorage(table_name="session_state", 
+                                           db_file="data/session_state.db",
+                                           auto_upgrade_schema=True,),  # for session state
+                enable_agentic_memory=True,  # update memory after each run
+                enable_user_memories=True,  # user facts/preferences are saved
+                enable_session_summaries=True,  # session summaries are saved
+                add_session_summary_references=False,  # add session summary references to responses
+                add_history_to_messages=True,  # include chat history in model context
                 read_chat_history=True,
                 num_history_responses=5,  # Number of past runs to include in context
-
-                memory=memory, # user memories (of past events)
+                memory=memory,   # user memories (of past events)
                 stream=True,
                 telemetry=False
             )
-            # playground = Playground(agents=[agent])
-            # app = playground.get_app()
-            # playground.serve(app)
+
+            playground = Playground(agents=[agent1])
+            app = playground.get_app()
+            playground.serve(app)
 
     except Exception as e:
         logger.error(f'Error when retrieving the agent {e}')
         return
 
-limitus_agent = asyncio.run(make_agent())
-# # agents = [asyncio.run(make_agent())]  if several agents
-app = Playground(agents=[limitus_agent]).get_app(use_async=True)
+# limitus_agent = make_agent()
+# # # agents = [asyncio.run(make_agent())]  if several agents
+# app = Playground(agents=[limitus_agent]).get_app(use_async=False)
 
 if __name__ == "__main__":
-    # asyncio.run(make_agent())
+    asyncio.run(make_agent())
+    
     # cd agent-ui && npm run dev to start localhost:3000
-    async def xx():        
-        await serve_playground_app("agno_agent:app", reload=True, port=7777) 
-    asyncio.run(xx())
+    # serve_playground_app("agno_agent:app", reload=True, port=7777)

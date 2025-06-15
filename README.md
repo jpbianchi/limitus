@@ -33,7 +33,7 @@ To create the Agent UI ([link](https://docs.agno.com/agent-ui/introduction)):
 -  `cd agent-ui`
 -  `npm run dev` (starts agent frontend Agno at localhost:3000)
 However, this part can be skipped by using the link provided when the endpoint 
-starts (begins with https://app.agno.com/playground/agents....)
+starts (begins with https://app.agno.com/playground?endpoint=....)
 
 To start the agent endpoint @ localhost:7777
 

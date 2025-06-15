@@ -26,7 +26,10 @@ dependencies = [
     "llama-api-client",
     "sqlalchemy",
     "telethon",
-    "mcptools"
+    "mcp",
+    "fastmcp",
+    "nest_asyncio",
+    "google-genai"
 ]
 
 [dependency-groups]
