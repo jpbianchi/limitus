@@ -1,16 +1,3 @@
----
-title: Limitus
-emoji: 🚀
-colorFrom: red
-colorTo: red
-sdk: docker
-app_port: 8501
-tags:
-- streamlit
-pinned: false
-short_description: Agents
----
-
 <p align="center">
   <img src="data/logos/great_logo.png" width="600px"/>
 </p>
