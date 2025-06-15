@@ -9,6 +9,7 @@ README1.md
 .streamlit/
 agent-ui/
 TODO.md
+agno/
 # C extensions
 *.so
 
