@@ -1,5 +1,6 @@
 from textwrap import dedent
 import os
+import random
 import asyncio
 import nest_asyncio
 from agno.agent import Agent
@@ -14,6 +15,8 @@ from agno.storage.agent.sqlite import SqliteAgentStorage
 from agno.memory.v2.db.sqlite import SqliteMemoryDb
 from agno.models.openrouter import OpenRouter
 from tools.ecommerce import ecommerce
+import logging
+logger = logging.getLogger()
 
 if os.getenv('ENVIRONMENT') is None:
     from dotenv import load_dotenv
@@ -24,10 +27,10 @@ nest_asyncio.apply()
 
 ossmodel = OpenRouter(
                     # id="meta-llama/llama-3.3-70b-instruct",     # not good for MCP
-                    # id="deepseek/deepseek-r1-distill-llama-70b", # ok for MCP
+                    id="deepseek/deepseek-r1-distill-llama-70b", # ok for MCP
                     # id="deepseek/deepseek-r1-distill-qwen-32b", # not good for MCP
                     # id="deepseek/deepseek-r1-0528:free",          # not good for MCP
-                    id="deepseek/deepseek-r1",  # ok for MCP
+                    # id="deepseek/deepseek-r1",  # ok for MCP
                     # id="qwen/qwen3-235b-a22b",   # ok for MCP
                     # id="openai/gpt-4.1-nano",
                     max_tokens=10000,
@@ -72,7 +75,7 @@ instructions = [    # For 'non GPT4' models, I had to 'help' the model for MCP b
                     dedent("""                
                         - If the user asks to post something on the discord server, do it on the general channel and do NOT process the message
                         - To send a message, use the MCP tool send-message(channel=general, message=<message>)
-                        - If the user asks to read posts from the discord server, do it on the general channel and DO process the message just like any message entered by the user
+                        - If the user asks to read posts from the discord server, do it on the general channel and DO process the messages just like any message entered by the user
                         - To read n messages, use the MCP tool read-messages(channel=general, limit=n)
                         - It is very important you respect these two messages format for Discord or someone is going to get hurt badly!
                     """),
@@ -81,7 +84,8 @@ instructions = [    # For 'non GPT4' models, I had to 'help' the model for MCP b
                     The user may give you his request directly or in a post on discord.  
 
                     # Core requirements:
-                    - If a user asks you to retrieve his instructions on discord, read the last post on Discord and treat is as if it was given directly.
+                    - If a user asks you to retrieve his instructions on discord, read the last 3 posts on Discord, 
+                      check if there is a request for items in any of them,  and treat is as if it was given directly.
                     - Otherwise, process his request without caring about Discord and use the ecommerce tools
                     - Review the tools descriptions to understand how to use them, and the data they return
                     - At the beginning of a conversation, ALWAYS connect to the website using the tool and retrieve the list of items.
@@ -94,13 +98,17 @@ instructions = [    # For 'non GPT4' models, I had to 'help' the model for MCP b
                     - If the question is not about the items in the website, just reply normally, without using tools.
 
                     # STEPS:
+                    - analyze if the user is asking you to get instructions from Discord or giving you instructions directly
+                    - when you read instructions from Discord, do not take into account the purchases already done, 
+                      but only the request for items
+                    - tell the user which instructions you are going to process to make recommendations
                     - retrieve the items list from the website (never from the web) and show them to the user
                     - understand the user question to find out which items correspond to his wishes (e.g. running shoes if he likes to run)
-                    - If the user asks for a specific item, you must add it to the list of choices you have prepared.
+                    - If the user asks for a specific item, you must add it to the list of recommendations.
                     - If the user says he doesn't want an item, you must remove it from your list of recommendations. 
                     - Automatically order the recommended items without asking the user.
                     - Present the user with the proof of purchase if the website returned it.
-                    - Then post a summary of the purchase on the 'general' discord channel using the MCP tool if it's available
+                    - Then post a summary of the purchase on the 'general' discord channel using the MCP tool if it's available.
 
                     # IMPORTANT
                         * You can ONLY mention items that were retrieved from the website, not some item you found on the web
@@ -142,6 +150,8 @@ async def make_agent() -> Agent:
                 name="Limitus AI Agent",
                 model=ossmodel,
                 markdown=True,
+                user_id=random.randint(1,10000), # avoid using memory from previous session
+                session_id=random.randint(1,1000), # avoid using memory from previous user
                 tools=[
                     ecommerce,
                     mcp_tools,
@@ -150,7 +160,7 @@ async def make_agent() -> Agent:
                 ],
                 show_tool_calls=False,
 
-                debug_mode=False,
+                debug_mode=True,
                 add_datetime_to_instructions=True,
 
                 instructions=instructions,
@@ -160,14 +170,14 @@ async def make_agent() -> Agent:
                 storage=SqliteAgentStorage(table_name="session_state", 
                                            db_file="data/session_state.db",
                                            auto_upgrade_schema=True,),  # for session state
-                enable_agentic_memory=True,  # update memory after each run
-                enable_user_memories=True,  # user facts/preferences are saved
-                enable_session_summaries=True,  # session summaries are saved
+                # memory=memory,   # user memories (of past events)
+                enable_agentic_memory=False,  # update memory after each run
+                enable_user_memories=False,  # user facts/preferences are saved
+                enable_session_summaries=v,  # session summaries are saved
                 add_session_summary_references=False,  # add session summary references to responses
                 add_history_to_messages=True,  # include chat history in model context
                 read_chat_history=True,
                 num_history_responses=5,  # Number of past runs to include in context
-                memory=memory,   # user memories (of past events)
                 stream=True,
                 telemetry=False
             )
@@ -189,3 +199,6 @@ if __name__ == "__main__":
     
     # cd agent-ui && npm run dev to start localhost:3000
     # serve_playground_app("agno_agent:app", reload=True, port=7777)
+
+
+# when retrieving instructions from discord, it looks for items before oening the website -> AttributeError: 'NoneType' object has no attribute 'items'
