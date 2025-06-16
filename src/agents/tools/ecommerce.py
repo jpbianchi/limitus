@@ -86,6 +86,7 @@ class EcommerceToolkit(Toolkit):
             The items must be put in the cart first, with 'order_items'
             Then goes back to the items inventory like after logging, so
             items can be bought again.
+            A credit card is not necessary here.
             first_name = the first name of the user if it is known
             last_name = the last name of the user if it is known
             postal_code = postal code of the user if it is known
@@ -111,7 +112,7 @@ class EcommerceToolkit(Toolkit):
             
             return json.dumps({"confirmation": confirmation, "cart": self.cart_items}) 
         else:
-            return json.dumps("The web driver is not available")
+            return json.dumps("The web driver is not available.  Maybe login again?")
 
     def __del__(self):
         """ Quits the website, closes the window """

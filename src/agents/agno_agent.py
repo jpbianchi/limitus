@@ -173,7 +173,7 @@ async def make_agent() -> Agent:
                 # memory=memory,   # user memories (of past events)
                 enable_agentic_memory=False,  # update memory after each run
                 enable_user_memories=False,  # user facts/preferences are saved
-                enable_session_summaries=v,  # session summaries are saved
+                enable_session_summaries=False,  # session summaries are saved
                 add_session_summary_references=False,  # add session summary references to responses
                 add_history_to_messages=True,  # include chat history in model context
                 read_chat_history=True,
