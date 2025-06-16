@@ -201,4 +201,4 @@ if __name__ == "__main__":
     # serve_playground_app("agno_agent:app", reload=True, port=7777)
 
 
-# when retrieving instructions from discord, it looks for items before oening the website -> AttributeError: 'NoneType' object has no attribute 'items'
+# LAST BUG: it presents recommendations several times before buying
