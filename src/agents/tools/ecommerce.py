@@ -63,7 +63,7 @@ class EcommerceToolkit(Toolkit):
         
         return json.dumps({"instructions": instructions, "status": "Logged in to the site done"})
 
-    def calculate_total_price(self, prices: list, agent:Agent):
+    def calculate_total_price(self, prices: list[str], agent:Agent):
         """ Use this tool to calculates the total cost: prices can be integers or str, 
             but without a currency symbol and a dot for the decimals, not a comma.
             Returns the sum of the prices in the given list
@@ -105,7 +105,7 @@ class EcommerceToolkit(Toolkit):
 
     def put_items_in_cart(self, 
                           agent: Agent,
-                          titles: list=None
+                          titles: list[str]=None
                           ):
         """
         Use this tool to generate the recommendations to the cart.
@@ -115,6 +115,11 @@ class EcommerceToolkit(Toolkit):
         Titles is a list of product titles to add to cart.
         Returns instructions for the next step
         """
+        if titles is None:
+            # FIX: Explicitly type list parameters (e.g., List[str]) 
+            # to ensure Agno generates valid JSON schemas with "items", preventing tool schema errors.
+            titles = []
+        
         logger.info(f"{inspect.currentframe().f_code.co_name} used")
         
         if titles is None:
@@ -131,12 +136,12 @@ class EcommerceToolkit(Toolkit):
 
         time.sleep(1)
         
-        self.checkout_and_pay(agent)
+        self.checkout_and_pay(agent, "John", "Doe", "12345")
         
         instructions = "Now, the next step is to use the checkout_and_pay tool to place the order"
         return json.dumps({"instructions": instructions})
 
-    def checkout_and_pay(self, agent: Agent, first_name="John", last_name="Doe", postal_code="12345"):
+    def checkout_and_pay(self, agent: Agent, first_name: str, last_name: str, postal_code: str):
         """ Use this tool to to checkout the items in the current cart and pay.
             The items must be put in the cart first, with 'put_items_in_cart'
             Then it goes back to the items inventory like after logging, so
@@ -149,6 +154,14 @@ class EcommerceToolkit(Toolkit):
             postal_code = postal code of the user if he specifies it
             Returns a purchase confirmation and instructions, and a status.
         """
+        if not first_name:
+            # initialization here: same reason as above, ie to avoid schema generation issues
+            first_name = "John"
+        if not last_name:
+            last_name = "Doe"
+        if not postal_code:
+            postal_code = "12345"
+        
         logger.info(f"{inspect.currentframe().f_code.co_name} used")
         if self.driver is not None:
             self.driver.find_element(By.CLASS_NAME, "shopping_cart_link").click()

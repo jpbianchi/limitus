@@ -57,11 +57,15 @@ This is the same except the agent must read a post from a Discord server I creat
 
 #### Final observations & Improvements
 
+I have implemented a basic purchase sequence (select - put in cart - checkout).  I could have gone back to the inventory page to allow further purchases, but managing such things with Selenium is not quite my thing and didn't seem to be part of the requirements.  
+
 It was not easy to make an agent with a small OSS model such as the distilled Llama 3.3 70B model that I used.
 I had to reduce the size of the prompt, simplify it to finally make it work, otherwise it would, at times, forget to call a tool for instance (even it just said that was its next step).  
 
+Despite my efforts, very seldom (1/10), the agent starts loading a fake inventory instead of calling the appropriate tool.  It can probably solved by working on the prompting.  
+
 I tried with HuggingFaceHub, but the models were failing for a reason or another, which is probably due to the use of tools.  I had to use OpenRouter which wraps the models to allows tools use.  But even so, some models can't deal with MCP for some reason (see the comments in the code).
 
-I have implemented a basic purchase sequence (select - put in cart - checkout).  I could have gone back to the inventory page to allow further purchases, but managing such things with Selenium is not quite my thing and didn't seem to be part of the requirements.  
-
 The tools were tested and don't fail.  However, a more powerful LLM seems suitable to handle an agent, especially with long prompts.  
+
+One particularly difficult to find issue, was due to the initialization `titles: list[st]=None`.  When a parameter is declared like that, the schema generator sees a parameter that can be either `null` (because of the default `None`) or an array (because of the type `list`), but without a clear specification of what the array contains. This often leads to generating an incomplete or invalid JSON schema for that parameter, typically missing the required `"items"` property that specifies the type of elements inside the array.  
