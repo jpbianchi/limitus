@@ -10,7 +10,7 @@ The items are selected by an agent after analysing the user's question or descri
 
 The agent replies to any question non related to the items as a `deepseek-r1-distill-llama-70b` accessed through `https://openrouter.ai`.  It was clearly powerful enough to understand the user's question and analyze the items in the inventory to pick the relevant ones.  
 
-It is based on the Agno framework in which I have define a Toolkit, ie several tools that open the webpage of a mock ecommerce site (no payments, but everything else is identical), retrieve the inventory, selects 2 items relevant to the user's needs, then puts them in the cart, check out and place the order (using the name but no credit card).
+It is based on the Agno framework in which I have defined a Toolkit, ie several tools that open the webpage of a mock ecommerce site (no payments, but everything else is identical), retrieve the inventory, selects 2 items relevant to the user's needs, then puts them in the cart, check out and place the order (using the name but no credit card).
 
 The agent can also read the last post from a Discord server `JPB server` using a MCP client, and process it as an instruction like in the previous case.  It communicates through a MCP server, which connects to the bot of a newly created Discord server (I can send an invite to the examiner).  To test this feature, you will need the bot's token which I can't put on github.  
 
@@ -45,14 +45,14 @@ However, this part can be skipped by using the link provided when the endpoint s
 
 Otherwise, to start the agent endpoint, open `localhost:7777` in your browser, and you will get Agno agent frontend.
 
-One must run the file `src/agno_agent.py` and make sure to load the .env file as well.  
+One must run the file `src/agno_agent.py` which will load the .env file as well.  
 
 
 #### Demo & Video
-[DEMO1 - purchase from agent frontend](<data/DEMO1 - purchase from agent frontend.mov>)
+[DEMO1 - purchase from agent frontend](https://drive.google.com/file/d/1AKbAo98LTPrXOp7NN_NDtP__fYHQpfeV/view?usp=sharing)
 This demo shows how a user can input a description of what he needs or intends to do, and the Agent will retrieve the inventory from a mock ecommerce website, then select 2 relevant items, then proceed to put them in the cart and pay.  
 
-[DEMO2 - purchase from a Discord post](<data/DEMO2 - purchase from Discord post.mov>)
+[DEMO2 - purchase from a Discord post](https://drive.google.com/file/d/1jCMeNowHxcQGu0uniaCxVidzh-NvqHPq/view?usp=sharing)
 This is the same except the agent must read a post from a Discord server I created (handled by a bot) so it can retrieve the instructions using a MCP client.
 
 #### Final observations & Improvements
