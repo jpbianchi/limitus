@@ -45,7 +45,7 @@ However, this part can be skipped by using the link provided when the endpoint s
 
 Otherwise, to start the agent endpoint, open `localhost:7777` in your browser, and you will get Agno agent frontend.
 
-One must run the file `src/agno_agent.py` which will load the .env file as well.  
+Use this script `start.agent.sh` to start the endpoint which will load the .env file as well. 
 
 
 #### Demo & Video
