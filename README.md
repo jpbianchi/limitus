@@ -1,8 +1,10 @@
-<p align="center">
+<!-- 
+<p align="center"> 
   <img src="data/logos/great_logo.png" width="600px"/>
 </p>
+-->
 
-## Limitus Agents
+## eCommerce Agents
 
 #### Description
 I created an agent that can purchase items on a ecommerce website (with a limited number of items).
@@ -53,7 +55,19 @@ Use this script `start.agent.sh` to start the endpoint which will load the .env 
 This demo shows how a user can input a description of what he needs or intends to do, and the Agent will retrieve the inventory from a mock ecommerce website, then select 2 relevant items, then proceed to put them in the cart and pay.  
 
 [DEMO2 - purchase from a Discord post](https://drive.google.com/file/d/1jCMeNowHxcQGu0uniaCxVidzh-NvqHPq/view?usp=sharing)
-This is the same except the agent must read a post from a Discord server I created (handled by a bot) so it can retrieve the instructions using a MCP client.
+This is the same except the agent must read a post from a Discord server `JPB server` I created (handled by a bot) so it can retrieve the instructions using a MCP client.
+
+<p align="center">
+  <img src="data/images/inventory.png" width="600px"/>
+</p>
+
+<p align="center">
+  <img src="data/images/chat.png" width="600px"/>
+</p>
+
+<p align="center">
+  <img src="data/images/order.png" width="600px"/>
+</p>
 
 #### Final observations & Improvements
 
